@@ -1,0 +1,24 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+
+url = "https://internshala.com/internships/matching-preferences/"
+response = requests.get(url).text
+soup = BeautifulSoup(response, "lxml")
+internships = soup.find_all("div", class_="internship_meta")
+
+data = []
+
+for internship in internships:
+    name = internship.find("a", class_="view_detail_button").text
+    company=internship.find("a", class_="link_display_like_text view_detail_button" ).text.strip()
+    location = internship.find("a", class_="location_link view_detail_button").text.strip()
+    stipend_elem = internship.find_all("div", class_="item_body")[1]
+    stipend = stipend_elem.text.strip().replace(',', '') if stipend_elem else "Unpaid"
+    Exp = internship.find_all("div", class_="item_body")[2].text.strip()
+    apply_by = internship.find_all("div", class_="item_body")[0].text.strip()
+    data.append([name,company, location, stipend, Exp, apply_by])
+
+df = pd.DataFrame(data, columns=['Name','company', 'Location', 'Stipend', 'Experience', 'Apply By'])
+print(df)
