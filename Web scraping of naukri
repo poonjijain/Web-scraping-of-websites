@@ -1,0 +1,51 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+
+import time
+from selenium import webdriver
+from bs4 import BeautifulSoup
+
+# Specify the path to the webdriver executable
+webdriver_path = 'path/to/chromedriver'  # Replace with the actual path to your webdriver
+
+# Launch the Chrome browser using Selenium webdriver
+driver = webdriver.Chrome(webdriver_path)
+
+url = "https://www.naukri.com/it-jobs?src=gnbjobs_homepage_srch"
+
+try:
+    driver.get(url)
+
+    # Sleep for a few seconds to allow the page to load and dynamically load the job listings
+    time.sleep(5)
+
+    # Get the page source after it has been dynamically loaded
+    page_source = driver.page_source
+
+    soup = BeautifulSoup(page_source, "html.parser")
+    data=[]
+    if "captcha" in soup.text:
+        print("Captcha encountered. Please verify your request.")
+    else:
+        job_listings = soup.find_all("article", class_="jobTuple")
+        
+        for job in job_listings:
+            t=job.find("a", class_="title ellipsis").text
+            cn=job.find("a", class_="subTitle ellipsis fleft").text
+            s=job.find("span", class_="ellipsis fleft").text
+            e=job.find("span", class_="ellipsis fleft expwdth").text
+            l=job.find("span",class_="ellipsis fleft locWdth").text
+            w="Naukri"
+            data.append([t,cn,l,s,e,w])
+    d=pd.DataFrame(data, columns=['Name','company', 'Location', 'Stipend', 'Experience',"Website"])
+    print(d)
+finally:
+    # Close the browser
+    driver.quit()
+with open('output.csv', 'a') as file:
+   d.to_csv(file, index=False)
+   print("updated")
+
+
